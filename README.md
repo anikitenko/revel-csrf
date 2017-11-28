@@ -98,7 +98,6 @@ You can call `csrf.ExemptedFullPath()` or `csrf.ExemptedGlob()` to exempt routes
 
 ## TODO
 
-* Unique token per-page.
 * Test cases.
 
 ## CONTRIBUTORS

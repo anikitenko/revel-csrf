@@ -8,12 +8,12 @@ func TestExemptedFullPath(t *testing.T) {
 	path := "/Hello"
 
 	ExemptedFullPath(path)
-	if !IsExempted(path) {
+	if !isExempted(path) {
 		t.Errorf("%v is not exempted, but it should be", path)
 	}
 
 	other := "/Goodbye"
-	if IsExempted(other) {
+	if isExempted(other) {
 		t.Errorf("%v is exempted, but it shouldn't be", other)
 	}
 }
@@ -23,13 +23,13 @@ func TestExemptedFullPaths(t *testing.T) {
 
 	ExemptedFullPaths(paths...)
 	for _, v := range paths {
-		if !IsExempted(v) {
+		if !isExempted(v) {
 			t.Errorf("%v should be exempted, but it isn't", v)
 		}
 	}
 
 	other := "/accounts"
-	if IsExempted(other) {
+	if isExempted(other) {
 		t.Errorf("%v is exempted, but it shouldn't be", other)
 	}
 }
@@ -40,22 +40,22 @@ func TestExemptedGlob(t *testing.T) {
 	ExemptedGlob(glob)
 
 	test := "/mail"
-	if !IsExempted(test) {
+	if !isExempted(test) {
 		t.Errorf("%v should be exempted, but it isn't.", test)
 	}
 
 	test = "/nail"
-	if !IsExempted(test) {
+	if !isExempted(test) {
 		t.Errorf("%v should be exempted, but it isn't.", test)
 	}
 
 	test = "/snail"
-	if IsExempted(test) {
+	if isExempted(test) {
 		t.Errorf("%v should not be exempted, but it is.", test)
 	}
 
 	test = "/mail/outbox"
-	if IsExempted(test) {
+	if isExempted(test) {
 		t.Errorf("%v should not be exempted, but it is.", test)
 	}
 }
@@ -72,13 +72,13 @@ func TestExemptedGlobs(t *testing.T) {
 	ExemptedGlobs(slice...)
 
 	for _, v := range matching {
-		if !IsExempted(v) {
+		if !isExempted(v) {
 			t.Errorf("%v should be exempted, but it isn't.", v)
 		}
 	}
 
 	for _, v := range nonMatching {
-		if IsExempted(v) {
+		if isExempted(v) {
 			t.Errorf("%v shouldn't be exempted, but it is", v)
 		}
 	}

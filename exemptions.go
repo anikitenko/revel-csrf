@@ -29,8 +29,8 @@ var (
 	exemptionsGlobs globPath
 )
 
-// IsExempted checks whether given path is exempt from CSRF checks or not.
-func IsExempted(path string) bool {
+// isExempted checks whether given path is exempt from CSRF checks or not.
+func isExempted(path string) bool {
 	exemptionsFullPath.RLock()
 	_, found := exemptionsFullPath.list[path]
 	exemptionsFullPath.RUnlock()

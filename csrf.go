@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	errNoReferer  = "REVEL_CSRF: A secure request contained no Referer or its value was malformed."
-	errBadReferer = "REVEL_CSRF: Same-origin policy failure."
-	errBadToken   = "REVEL_CSRF: tokens mismatch."
+	errNoReferer  = "A secure request contained no Referer or its value was malformed!"
+	errBadReferer = "Same-origin policy failure!"
+	errBadToken   = "Tokens mismatch!"
 	safeMethods   = regexp.MustCompile("^(GET|HEAD|OPTIONS|TRACE|WS)$")
 )
 
@@ -51,19 +51,29 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 
 	// See http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Safe_methods
 	unsafeMethod := !safeMethods.MatchString(r.Method)
-	if unsafeMethod && !IsExempted(r.URL.Path) {
+	if unsafeMethod && !isExempted(r.URL.Path) {
 		revel.AppLog.Infof("REVEL-CSRF: Processing unsafe '%s' method...", r.Method)
 		if r.URL.Scheme == "https" {
 			// See [OWASP]; Checking the Referer Header.
 			referer, err := url.Parse(r.Header.Get("Referer"))
 			if err != nil || referer.String() == "" {
 				// Parse error or empty referer.
-				c.Result = c.Forbidden(errNoReferer)
+				if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
+					c.Result = c.Forbidden(errNoReferer)
+				} else {
+					c.Flash.Error(errNoReferer)
+					c.Result = c.Redirect(forbidden)
+				}
 				return
 			}
 			// See [OWASP]; Checking the Origin Header.
 			if !sameOrigin(referer, r.URL) {
-				c.Result = c.Forbidden(errBadReferer)
+				if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
+					c.Result = c.Forbidden(errBadReferer)
+				} else {
+					c.Flash.Error(errBadReferer)
+					c.Result = c.Redirect(forbidden)
+				}
 				return
 			}
 		}
@@ -83,12 +93,22 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 		revel.AppLog.Infof("REVEL-CSRF: Token received from client: '%s'", sentToken)
 
 		if len(sentToken) != len(realToken) {
-			c.Result = c.Forbidden(errBadToken)
+			if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
+				c.Result = c.Forbidden(errBadToken)
+			} else {
+				c.Flash.Error(errBadToken)
+				c.Result = c.Redirect(forbidden)
+			}
 			return
 		}
 		comparison := subtle.ConstantTimeCompare([]byte(sentToken), []byte(realToken))
 		if comparison != 1 {
-			c.Result = c.Forbidden(errBadToken)
+			if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
+				c.Result = c.Forbidden(errBadToken)
+			} else {
+				c.Flash.Error(errBadToken)
+				c.Result = c.Redirect(forbidden)
+			}
 			return
 		}
 		revel.AppLog.Infof("REVEL-CSRF: Token successfully checked.")
