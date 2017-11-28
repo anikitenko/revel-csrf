@@ -25,6 +25,9 @@ A boolean value that indicates whether or not `revel-csrf` should support the in
 * `csrf.token.length`
 An integer value that defines the number of characters that should be found within CSRF tokens. Token length should be in [32..512] and default value is 32 characters.
 
+* `csrf.forbidden`
+A string value which indicates redirect URL. Default is "" which mean that on error you'll be redirected to default 403 page
+
 ## Operating instructions
 
 Simply call the CSRFFilter() filter in `app/init.go`.  
@@ -94,7 +97,7 @@ Javascript-code sample to perform AJAX calls with jQuery 1.5 and newer.
 	    });
 	});
 
-You can call `csrf.ExemptedFullPath()` or `csrf.ExemptedGlob()` to exempt routes from CSRF checks. See `app/init.go` in demo application.
+You can call `csrf.ExemptedFullPath()` or `csrf.ExemptedGlob()` to exempt routes from CSRF checks. See `app/init.go` in demo application. IMPORTANT: Unsafe URLs won't be ignored. It only adds specified URL to list of ignored when setting .csrf_token var in templates
 
 ## TODO
 
