@@ -94,8 +94,10 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 
 		if len(sentToken) != len(realToken) {
 			if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
+				revel.AppLog.Info("Triggering forbidden 403")
 				c.Result = c.Forbidden(errBadToken)
 			} else {
+				revel.AppLog.Info("Triggering redirect with flash")
 				c.Flash.Error(errBadToken)
 				c.Result = c.Redirect(forbidden)
 			}
@@ -104,8 +106,10 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 		comparison := subtle.ConstantTimeCompare([]byte(sentToken), []byte(realToken))
 		if comparison != 1 {
 			if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
+				revel.AppLog.Info("Triggering forbidden 403")
 				c.Result = c.Forbidden(errBadToken)
 			} else {
+				revel.AppLog.Info("Triggering redirect with flash")
 				c.Flash.Error(errBadToken)
 				c.Result = c.Redirect(forbidden)
 			}
