@@ -32,7 +32,7 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 	tokenCookie, found := c.Session[cookieName]
 	realToken := ""
 	if !found {
-		realToken = generateNewToken(c)
+		realToken = GenerateNewToken(c)
 	} else {
 		realToken = tokenCookie
 		revel.AppLog.Infof("REVEL-CSRF: Session's token: '%s'\n", realToken)
@@ -43,7 +43,7 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 			// error will be detected later.
 			revel.AppLog.Warnf("REVEL_CSRF: Bad token length: found %d, expected %d",
 				len(realToken), lengthCSRFToken)
-			realToken = generateNewToken(c)
+			realToken = GenerateNewToken(c)
 		}
 	}
 

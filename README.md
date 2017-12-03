@@ -9,11 +9,11 @@ Code is based on the `nosurf` package implemented by
 
 ## Installation
 
-    go get github.com/cbonello/revel-csrf
+    go get github.com/anikitenko/revel-csrf
 
 A demo application is provided in the samples directory. To launch it:
 
-    revel run github.com/cbonello/revel-csrf/samples/demo
+    revel run github.com/anikitenko/revel-csrf/samples/demo
 
 ## Configuration options
 
@@ -30,12 +30,12 @@ A string value which indicates redirect URL. Default is "" which mean that on er
 
 ## Operating instructions
 
-Simply call the CSRFFilter() filter in `app/init.go`.  
+Simply call the Filter() filter in `app/init.go`.  
 
     package app
 
     import (
-        "github.com/cbonello/revel-csrf"
+        "github.com/anikitenko/revel-csrf"
         "github.com/revel/revel"
     )
 
@@ -48,7 +48,7 @@ Simply call the CSRFFilter() filter in `app/init.go`.
 		    revel.ParamsFilter,            // Parse parameters into Controller.Params.
 		    revel.SessionFilter,           // Restore and write the session cookie.
 		    revel.FlashFilter,             // Restore and write the flash cookie.
-		     csrf.CSRFFilter,              // CSRF prevention.
+		    csrf.Filter,                   // CSRF prevention.
 		    revel.ValidationFilter,        // Restore kept validation errors and save new ones from cookie.
 		    revel.I18nFilter,              // Resolve the requested language
 		    revel.InterceptorFilter,       // Run interceptors around the action.
@@ -98,6 +98,8 @@ Javascript-code sample to perform AJAX calls with jQuery 1.5 and newer.
 	});
 
 You can call `csrf.ExemptedFullPath()` or `csrf.ExemptedGlob()` to exempt routes from CSRF checks. See `app/init.go` in demo application. IMPORTANT: Unsafe URLs won't be ignored. It only adds specified URL to list of ignored when setting .csrf_token var in templates
+
+Also you can use `newToken := csrf.GenerateNewToken(c)` to generate new token
 
 ## TODO
 

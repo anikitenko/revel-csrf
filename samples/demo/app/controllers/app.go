@@ -2,7 +2,6 @@ package controllers
 
 import (
     "github.com/revel/revel"
-    "github.com/cbonello/revel-csrf/samples/demo/app/routes"
     "fmt"
 )
 
@@ -15,9 +14,7 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) Hello(name string) revel.Result {
-	route := c.Request.Request.URL.Path
-	exempted := (route == "/HelloExempted")
-	return c.Render(name, exempted)
+	return c.Render(name)
 }
 
 func (c App) Hello123Exempted(name string) revel.Result {
@@ -30,5 +27,5 @@ func (c App) Logout(name string) revel.Result {
 		fmt.Printf("Deleting Session[%s]: '%s'\n", k, c.Session[k])
 		delete(c.Session, k)
 	}
-	return c.Redirect(routes.App.Index())
+	return c.Redirect(App.Index)
 }
