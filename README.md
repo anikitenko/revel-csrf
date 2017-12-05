@@ -28,6 +28,18 @@ An integer value that defines the number of characters that should be found with
 * `csrf.forbidden`
 A string value which indicates redirect URL. Default is "" which mean that on error you'll be redirected to default 403 page
 
+* `csrf.errNoReferer`
+A string value which indicates message on error when no referer in request. Default is "" which mean
+`A secure request contained no Referer or its value was malformed!`
+
+* `csrf.errBadReferer`
+A string value which indicates message on same-origin policy failure. Defailt is "" which mean
+`Same-origin policy failure!`
+
+* `csrf.errBadToken`
+A string value which indicates message on csrf tokens mismatch. Default is "" which mean
+`Tokens mismatch!`
+
 ## Operating instructions
 
 Simply call the Filter() filter in `app/init.go`.  

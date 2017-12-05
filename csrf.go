@@ -26,6 +26,15 @@ var (
 // Filter implements the CSRF filter.
 var Filter = func(c *revel.Controller, fc []revel.Filter) {
 	r := c.Request
+	if errNoRefererConfig := revel.Config.StringDefault("csrf.errNoReferer", ""); errNoRefererConfig != "" {
+		errNoReferer = errNoRefererConfig
+	}
+	if errBadRefererConfig := revel.Config.StringDefault("csrf.errBadReferer", ""); errBadRefererConfig != "" {
+		errBadReferer = errBadRefererConfig
+	}
+	if errBadTokenConfig := revel.Config.StringDefault("csrf.errBadToken", ""); errBadTokenConfig != "" {
+		errBadToken = errBadTokenConfig
+	}
 
 	// [OWASP]; General Recommendation: Synchronizer Token Pattern:
 	// CSRF tokens must be associated with the user's current session.
