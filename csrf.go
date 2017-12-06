@@ -7,7 +7,6 @@ import (
 	"crypto/subtle"
 	"github.com/revel/revel"
 	"net/url"
-	"regexp"
 )
 
 const (
