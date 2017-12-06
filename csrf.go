@@ -20,7 +20,13 @@ var (
 	errNoReferer  = "A secure request contained no Referer or its value was malformed!"
 	errBadReferer = "Same-origin policy failure!"
 	errBadToken   = "Tokens mismatch!"
-	safeMethods   = regexp.MustCompile("^(GET|HEAD|OPTIONS|TRACE|WS)$")
+	allowedMethods = map[string]bool{
+		"GET":     true,
+		"HEAD":    true,
+		"OPTIONS": true,
+		"TRACE":   true,
+	}
+	sentToken string
 )
 
 // Filter implements the CSRF filter.
@@ -59,12 +65,11 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 	c.ViewArgs[fieldName] = realToken
 
 	// See http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Safe_methods
-	unsafeMethod := !safeMethods.MatchString(r.Method)
-	if unsafeMethod && !isExempted(r.URL.Path) {
+	if !allowedMethods[c.Request.Method] && !isExempted(c) {
 		revel.AppLog.Infof("REVEL-CSRF: Processing unsafe '%s' method...", r.Method)
 		if r.URL.Scheme == "https" {
 			// See [OWASP]; Checking the Referer Header.
-			referer, err := url.Parse(r.Header.Get("Referer"))
+			referer, err := url.Parse(c.Request.Referer())
 			if err != nil || referer.String() == "" {
 				// Parse error or empty referer.
 				if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
@@ -87,7 +92,6 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 			}
 		}
 
-		sentToken := ""
 		if ajaxSupport := revel.Config.BoolDefault("csrf.ajax", false); ajaxSupport {
 			// Accept CSRF token in the custom HTTP header X-CSRF-Token, for ease
 			// of use with popular JavaScript toolkits which allow insertion of
@@ -101,19 +105,7 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 		}
 		revel.AppLog.Infof("REVEL-CSRF: Token received from client: '%s'", sentToken)
 
-		if len(sentToken) != len(realToken) {
-			if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
-				revel.AppLog.Info("Triggering forbidden 403")
-				c.Result = c.Forbidden(errBadToken)
-			} else {
-				revel.AppLog.Info("Triggering redirect with flash")
-				c.Flash.Error(errBadToken)
-				c.Result = c.Redirect(forbidden)
-			}
-			return
-		}
-		comparison := subtle.ConstantTimeCompare([]byte(sentToken), []byte(realToken))
-		if comparison != 1 {
+		if !compareToken(sentToken, realToken) {
 			if forbidden := revel.Config.StringDefault("csrf.forbidden", ""); forbidden == "" {
 				revel.AppLog.Info("Triggering forbidden 403")
 				c.Result = c.Forbidden(errBadToken)
@@ -133,4 +125,12 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 // See http://en.wikipedia.org/wiki/Same-origin_policy
 func sameOrigin(u1, u2 *url.URL) bool {
 	return u1.Scheme == u2.Scheme && u1.Host == u2.Host
+}
+
+func compareToken(requestToken, token string) bool {
+	// ConstantTimeCompare will panic if the []byte aren't the same length
+	if len(requestToken) != len(token) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(requestToken), []byte(token)) == 1
 }

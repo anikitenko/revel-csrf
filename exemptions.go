@@ -1,48 +1,32 @@
-// Package csrf is a synchronizer Token Pattern implementation.
-//
 // Management of routes exempted from CSRF checks.
 package csrf
 
 import (
 	"fmt"
 	pathPackage "path"
-	"sync"
-
 	"github.com/revel/revel"
+	"strings"
 )
 
-// I'm not cetain that we need a mutex because exempted routes are generally
-// configured when the application starts and the list is read-only after.
-type globPath struct {
-	sync.RWMutex
-	list []string
-}
-
 var (
-	exemptionsFullPath = struct {
-		sync.RWMutex
-		list map[string]struct{}
-	}{
-		list: make(map[string]struct{}),
-	}
-
-	exemptionsGlobs globPath
+	exemptionsFullPaths = make(map[string]bool)
+	exemptionsActions = make(map[string]bool)
+	exemptionsGlobs = make(map[string]struct{})
 )
 
 // isExempted checks whether given path is exempt from CSRF checks or not.
-func isExempted(path string) bool {
-	exemptionsFullPath.RLock()
-	_, found := exemptionsFullPath.list[path]
-	exemptionsFullPath.RUnlock()
-	if found {
+func isExempted(c *revel.Controller) bool {
+	path := c.Request.GetPath()
+	if _, ok := exemptionsFullPaths[strings.ToLower(path)]; ok {
 		revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted route '%s'...\n", path)
+		return true
+	} else if _, ok := exemptionsActions[c.Action]; ok {
+		revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted action '%s'...\n", path)
 		return true
 	}
 
-	for _, glob := range exemptionsGlobs.list {
-		exemptionsGlobs.RLock()
+	for glob := range exemptionsGlobs {
 		found, err := pathPackage.Match(glob, path)
-		exemptionsGlobs.RUnlock()
 		if err != nil {
 			// See http://golang.org/pkg/path/#Match for error description.
 			panic(fmt.Sprintf("REVEL-CSRF: malformed glob pattern: %#v", err))
@@ -55,18 +39,34 @@ func isExempted(path string) bool {
 	return false
 }
 
-// ExemptedFullPath exempts one exact path from CSRF checks.
+// ExemptedFullPath exempts path from CSRF checks.
 func ExemptedFullPath(path string) {
-	revel.AppLog.Infof("REVEL-CSRF: Adding exemption '%s'...\n", path)
-	exemptionsFullPath.Lock()
-	exemptionsFullPath.list[path] = struct{}{}
-	exemptionsFullPath.Unlock()
+	if strings.HasPrefix(path, "/") {
+		revel.AppLog.Infof("REVEL-CSRF: Adding exemption '%s'...\n", path)
+		exemptionsFullPaths[path] = true
+	}
 }
 
-// ExemptedFullPath exempts exact paths from CSRF checks.
+// ExemptedFullPaths exempts exact paths from CSRF checks.
 func ExemptedFullPaths(paths ...string) {
 	for _, v := range paths {
 		ExemptedFullPath(v)
+	}
+}
+
+// ExtemptedAction extempts exact action from CSRF checks.
+func ExtemptedAction(action string) {
+	if actionParts := strings.Split(action, "."); len(actionParts) == 2 {
+		// e.g. "ControllerName.ActionName"
+		revel.AppLog.Infof("REVEL-CSRF: Adding exemption '%s'...\n", action)
+		exemptionsActions[action] = true
+	}
+}
+
+// ExtemptedActions extempts exact actions from CSRF checks.
+func ExtemptedActions(actions ...string) {
+	for _, v := range actions {
+		ExtemptedAction(v)
 	}
 }
 
@@ -74,9 +74,7 @@ func ExemptedFullPaths(paths ...string) {
 // See http://golang.org/pkg/path/#Match
 func ExemptedGlob(path string) {
 	revel.AppLog.Infof("REVEL-CSRF: Adding exemption GLOB '%s'...\n", path)
-	exemptionsGlobs.Lock()
-	exemptionsGlobs.list = append(exemptionsGlobs.list, path)
-	exemptionsGlobs.Unlock()
+	exemptionsGlobs[path] = struct{}{}
 }
 
 // ExemptedGlobs exempts paths from CSRF checks using pattern matching.

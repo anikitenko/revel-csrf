@@ -7,6 +7,8 @@ prevention for the [Revel framework](https://github.com/revel/revel).
 Code is based on the `nosurf` package implemented by
 [Justinas Stankevičius](https://github.com/justinas/nosurf).
 
+Code is a fork of [https://github.com/cbonello/revel-csrf](https://github.com/cbonello/revel-csrf) with improvements and latest changes to Revel
+
 ## Installation
 
     go get github.com/anikitenko/revel-csrf
@@ -109,14 +111,20 @@ Javascript-code sample to perform AJAX calls with jQuery 1.5 and newer.
 	    });
 	});
 
-You can call `csrf.ExemptedFullPath()` or `csrf.ExemptedGlob()` to exempt routes from CSRF checks. See `app/init.go` in demo application. IMPORTANT: Unsafe URLs won't be ignored. It only adds specified URL to list of ignored when setting .csrf_token var in templates
+`csrf.GenerateNewToken(c)` is used to generate new token and set it in session
 
-Also you can use `newToken := csrf.GenerateNewToken(c)` to generate new token
+`csrf.ExemptedFullPath()` is used to extempt exact URL path from CSRF checks.
+
+`csrf.ExemptedFullPaths()` is the same as the previous one but accepts multiple arguments as URL path strings
+
+`csrf.ExtemptedAction()` is used to extempt exact action from CSRF checks e.g. `Controller.Action`
+
+`csrf.ExtemptedActions()` does the same as previous one but accepts multiple controllers
+
+`csrf.ExemptedGlob()` is used to extempt URL path by matching it using `path.Match` func. Argument to `ExemptedGlob()` func is `pattern string`
+
+`csrf.ExemptedGlobs()` does the same as previous one but accepts multiple patterns
 
 ## TODO
 
 * Test cases.
-
-## CONTRIBUTORS
-* Otto Bretz
-* Allen Dang
