@@ -77,7 +77,6 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 					c.Flash.Error(errNoReferer)
 					c.Result = c.Redirect(forbidden)
 				}
-				return
 			}
 			// See [OWASP]; Checking the Origin Header.
 			if !sameOrigin(referer, r.URL) {
@@ -87,7 +86,6 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 					c.Flash.Error(errBadReferer)
 					c.Result = c.Redirect(forbidden)
 				}
-				return
 			}
 		}
 
@@ -113,7 +111,6 @@ var Filter = func(c *revel.Controller, fc []revel.Filter) {
 				c.Flash.Error(errBadToken)
 				c.Result = c.Redirect(forbidden)
 			}
-			return
 		}
 		revel.AppLog.Infof("REVEL-CSRF: Token successfully checked.")
 	}

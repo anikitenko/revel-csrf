@@ -2,8 +2,7 @@
 package csrf
 
 import (
-	"fmt"
-	pathPackage "path"
+	"path"
 	"github.com/revel/revel"
 	"strings"
 )
@@ -16,23 +15,25 @@ var (
 
 // isExempted checks whether given path is exempt from CSRF checks or not.
 func isExempted(c *revel.Controller) bool {
-	path := c.Request.GetPath()
-	if _, ok := exemptionsFullPaths[strings.ToLower(path)]; ok {
-		revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted route '%s'...\n", path)
+	pathRequest := c.Request.GetPath()
+	if _, ok := exemptionsFullPaths[strings.ToLower(pathRequest)]; ok {
+		revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted route '%s'...\n", pathRequest)
 		return true
-	} else if _, ok := exemptionsActions[c.Action]; ok {
-		revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted action '%s'...\n", path)
+	}
+
+	if _, ok := exemptionsActions[c.Action]; ok {
+		revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted action '%s'...\n", pathRequest)
 		return true
 	}
 
 	for glob := range exemptionsGlobs {
-		found, err := pathPackage.Match(glob, path)
+		found, err := path.Match(glob, pathRequest)
 		if err != nil {
 			// See http://golang.org/pkg/path/#Match for error description.
-			panic(fmt.Sprintf("REVEL-CSRF: malformed glob pattern: %#v", err))
+			revel.AppLog.Fatalf("REVEL-CSRF: malformed glob pattern: %#v", err)
 		}
 		if found {
-			revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted route '%s'...", path)
+			revel.AppLog.Infof("REVEL-CSRF: Ignoring exempted route '%s'...", pathRequest)
 			return true
 		}
 	}
